@@ -1,4 +1,9 @@
 #include <ncurses.h>
 #include <random>
+#include <chrono>
+#include <vector>
+#include <queue>
+#include <algorithm>
 
-using namespace std;
+
+#include <unistd.h> //for debugging
