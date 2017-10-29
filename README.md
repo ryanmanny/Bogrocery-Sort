@@ -23,3 +23,4 @@ in your terminal.
 - Make it clear which customers are holding items (replace '$' with the number, I guess)
 - Change sleep function depending on operating system for portability
 - Simplify and add combine into one portable .h file for use in other projects, using ncurses windows
+- Add a fifth "don't move" direction to make customers move more naturally
