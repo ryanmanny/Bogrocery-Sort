@@ -1,4 +1,4 @@
-# Grogosort
+# Bogrocery Sort
 A combination of a grocery store simulator and bogosort. Used to learn curses implementation.
 
 # Installation
