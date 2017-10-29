@@ -1,11 +1,13 @@
 #include "includes.h"
 #include "Board.h"
 
+#define SPEED 10000 //time to wait between ticks in microseconds
+
 int main (void)
 {
 	initscr();
-	cbreak(); //still allows CTRL-C I hope
-	noecho(); //user can't see the characters she types (lol)
+	cbreak(); //still allows CTRL-C I hope - it does
+	noecho(); //users can't see the characters that they type
 	keypad(stdscr, TRUE); //arrow keys awesome
 
 	Board store;
@@ -18,7 +20,7 @@ int main (void)
 	{
 		sorted = store.update();
 		//printw("WAH WAH");
-		usleep(500);
+		usleep(SPEED);
 		store.print();
 	}
 

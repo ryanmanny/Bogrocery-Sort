@@ -28,7 +28,7 @@ public:
 
 		numCustomers = 0;
 
-		originalList = {0,1};
+		originalList = {0,1}; //default list
 		unsortedList = originalList;
 
 		//adds walls around the border of the board
@@ -44,9 +44,12 @@ public:
 			board.push_back(new Object(Type::WALL, GWALL, {BOARDWIDTH - 1, j}));
 		}
 
+		//adds the door (that blank space in the right wall), still collidable
 		board.push_back(new Object(Type::WALL, GDOOR, DOORPOS));
+		//adds checkout counter (the 'a')
 		board.push_back(new Object(Type::CHECKOUT, GCHECKOUT, CHECKOUTPOS));
 
+		//adds both rows of shelves
 		for (int i = BOARDWIDTH/3; i < 2 * (BOARDWIDTH/3); i++)
 		{
 			board.push_back(new Object(Type::SHELF, GSHELF, {i, BOARDHEIGHT/3}));
@@ -56,6 +59,7 @@ public:
 		// printw("About to add customer");
 		// getch();
 
+		//the simulation starts with one customer
 		board.push_back(new Customer(Type::CUSTOMER, GCUSTOMER, -1, CUSTOMERPOS));
 
 		// printw("Added customer");
@@ -65,6 +69,7 @@ public:
 	//returns true if list was successfully sorted
 	bool update(void)
 	{
+		//updates all objects
 		for (Object *o : board)
 		{
 			//only customers move
@@ -78,9 +83,10 @@ public:
 			}
 		}
 
+		//spawns a new customer in the store as long as some conditions are satisfied
 		spawnCustomer(CUSTOMERPOS);
 
-		//list has the potential to be sorted
+		//check to see if we're done
 		if (checkout.size() == originalList.size())
 		{
 			if (isSorted())
@@ -100,7 +106,7 @@ public:
 	//only customers can move - I would pass in objects with virtuals but only customers know how to even think about moving
 	void moveObject(Customer * obj)
 	{
-		//calculates next position based on direction and current position
+		//next position will store the position that the object intends to move into
 		Pos nextPos = obj->getPos();
 		Type at;
 		int element = -1;
@@ -108,8 +114,7 @@ public:
 		// printw("moving someone");
 		// getch();
 
-		//printw("customer is at (%d,%d)", nextPos.x, nextPos.y);
-
+		//actually calculates nextPos based on current position and direction
 		if (obj->getDirection() == Dir::NORTH)
 			nextPos.y += 1;
 		if (obj->getDirection() == Dir::SOUTH)
@@ -119,16 +124,9 @@ public:
 		if (obj->getDirection() == Dir::WEST)
 			nextPos.x -= 1;
 
-		// printw("next pos is (%d,%d)", nextPos.x, nextPos.y);
-
-		//check to see what happens at this new position
+		//check to see what is at the new position
 		if (atPos(nextPos) != nullptr)
 			at = atPos(nextPos)->getType();
-
-		// printw("(%d,%d) has type %d", nextPos.x, nextPos.y, at);
-		//
-		// printw("About to move");
-		// getch();
 
 		//we ain't moving into the wall, OR another customer
 		if (at != Type::WALL && at != Type::CUSTOMER && at != Type::SHELF)
@@ -138,13 +136,15 @@ public:
 			//actually moves the character
 			obj->move(nextPos);
 
+			//customer leaves the store if they reach checkout
 			if (at == Type::CHECKOUT)
 			{
 				destroy(static_cast<Customer *>(obj)); //removes object from the game board
 			}
 		}
 
-		if (at == Type::SHELF && obj->getElement() == -1 && !unsortedList.empty())
+		//used to pick up item off the shelf BUT not move into it
+		if (at == Type::SHELF && obj->getElement() == -1 && !unsortedList.empty()) //customer can't pick up two items
 		{
 			//customer picks last item off the shelf - CHANGE THIS TO RANDOM LATER
 			element = unsortedList.back();
@@ -152,15 +152,19 @@ public:
 			obj->pickup(element);
 		}
 
+		//calculates the object's next direction
 		obj->changeDir();
 	}
 
+	//prints every object on the board
 	void print(void)
 	{
-		erase(); //overlap?
+		//clears current window
+		erase(); //conflicts with namespace std
+
 		for (Object *o : board)
 		{
-			//no protection against negative values may cause trouble
+			//no protection against crazy values may cause trouble
 			mvaddch(o->getPos().y, o->getPos().x, o->getGraphic());
 		}
 
@@ -172,6 +176,7 @@ public:
 		refresh();
 	}
 
+	//returns object at a location, used for movement checks
 	Object * atPos(const Pos & position)
 	{
 		int i = 0;
@@ -179,40 +184,38 @@ public:
 		{
 			if (o->getPos() == position)
 			{
-				//printw("finding object");
-				//getch();
-				return board.at(i);
+				return board.at(i); //returns the object that was there for further examination
 			}
 			i++;
 		}
 		return nullptr; //nothing was found there
 	}
 
+	//destroys the customer and adds the item it was holding to the checkout list
 	void destroy(const Customer * obj)
 	{
-		numCustomers--;
-
-		//checkout.push_back(1);
-
-		// printw("Customer has item %d", obj->getElement());
-		// getch();
+		numCustomers--; //customer left the store
 
 		//adds element to sorted list
 		if (obj->getElement() != -1)
 		{
-			if (obj->getElement() == 33) //don't ask about this bug please
-			{
-				printw("33 ALERT!!!");
-				getch();
-			}
+			// if (obj->getElement() == 33) //don't ask about this bug please
+			// {
+			// 	printw("33 ALERT!!!");
+			// 	getch();
+			// }
 			checkout.push_back(obj->getElement());
 		}
 
+		//removes customer from the board
 		auto it = find(board.begin(), board.end(), obj);
-		delete obj;
 		board.erase(it);
+
+		//frees the customer's memory also. we can't let them remember what happened here...
+		delete obj;
 	}
 
+	//checks to see if the checkout vector is sorted. HUR
 	bool isSorted(void)
 	{
 		if (is_sorted(checkout.begin(), checkout.end()))
@@ -247,6 +250,7 @@ public:
 		return checkout;
 	}
 
+	//frees all the pointers in the board vector
 	~Board()
 	{
 		auto it = board.begin();
