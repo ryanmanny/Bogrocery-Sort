@@ -23,7 +23,7 @@ bool operator==(const Pos &l, const Pos &r)
 
 typedef enum type
 {
-	EMPTY, WALL, CUSTOMER, ITEM, CHECKOUT
+	EMPTY, WALL, CUSTOMER, SHELF, CHECKOUT
 	//empty is returned when no item at position, lack of action
 }Type;
 

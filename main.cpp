@@ -9,13 +9,27 @@ int main (void)
 	keypad(stdscr, TRUE); //arrow keys awesome
 
 	Board store;
-	while (true)
+
+	bool sorted = false;
+
+	std::vector<int> sortedList;
+
+	while (!sorted)
 	{
-		store.update();
+		sorted = store.update();
 		//printw("WAH WAH");
 		usleep(5000);
 		store.print();
 	}
 
+	sortedList = store.getCheckout();
+
+	printw("LIST SORTED WHAT A TRIUMPH\n");
+	for (int i : sortedList)
+	{
+		printw("%d ", i);
+	}
+
+	getch();
 	endwin();
 }

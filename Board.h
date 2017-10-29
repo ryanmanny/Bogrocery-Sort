@@ -5,17 +5,18 @@
 #define BOARDWIDTH 24
 
 #define GWALL (char) 177
-#define GDOOR (char) 176
+#define GDOOR     ' '
 #define GCHECKOUT 'a'
 #define GCUSTOMER '$'
+#define GSHELF    '#'
 
 #define CHECKOUTPOS {3, BOARDHEIGHT - 2}
 //#define CUSTOMERPOS {BOARDWIDTH - 2, BOARDHEIGHT / 2}
 #define CUSTOMERPOS {22,6}
-#define DOORPOS {23,6} //customers come out of the door
-#define MAXCUSTOMERS ((BOARDWIDTH - 2) * (BOARDHEIGHT - 2)) / 2 //fire marshall code
+#define DOORPOS {23,7} //customers come out of the door
 
-#define SPAWNLIKELIHOOD 200 //likelihood that a customer will spawn every tick. 0 is guaranteed every tick
+#define SPAWNLIKELIHOOD 50 //likelihood that a customer will spawn every tick. 0 is guaranteed every tick
+#define MAXCUSTOMERS 200 //((BOARDWIDTH - 2) * (BOARDHEIGHT - 2)) / 2 //fire marshall code
 
 class Board
 {
@@ -26,6 +27,9 @@ public:
 		spawn = std::uniform_int_distribution<int>(0,SPAWNLIKELIHOOD);
 
 		numCustomers = 0;
+
+		originalList = {0,1};
+		unsortedList = originalList;
 
 		//adds walls around the border of the board
 		for (int i = 0; i < BOARDWIDTH; i++)
@@ -41,8 +45,13 @@ public:
 		}
 
 		board.push_back(new Object(Type::WALL, GDOOR, DOORPOS));
-
 		board.push_back(new Object(Type::CHECKOUT, GCHECKOUT, CHECKOUTPOS));
+
+		for (int i = BOARDWIDTH/3; i < 2 * (BOARDWIDTH/3); i++)
+		{
+			board.push_back(new Object(Type::SHELF, GSHELF, {i, BOARDHEIGHT/3}));
+			board.push_back(new Object(Type::SHELF, GSHELF, {i, 2 * (BOARDHEIGHT/3)}));
+		}
 
 		// printw("About to add customer");
 		// getch();
@@ -53,7 +62,8 @@ public:
 		// getch();
 	}
 
-	void update(void)
+	//returns true if list was successfully sorted
+	bool update(void)
 	{
 		for (Object *o : board)
 		{
@@ -65,11 +75,26 @@ public:
 				//all customers do their next action
 
 				moveObject(static_cast<Customer *> (o));
-
 			}
 		}
 
 		spawnCustomer(CUSTOMERPOS);
+
+		//list has the potential to be sorted
+		if (checkout.size() == originalList.size())
+		{
+			if (isSorted())
+			{
+				//checkout is now the sorted list
+				return true;
+			}
+			else
+			{
+				unsortedList = originalList; //start over
+				checkout.clear();
+			}
+		}
+		return false;
 	}
 
 	//only customers can move - I would pass in objects with virtuals but only customers know how to even think about moving
@@ -78,6 +103,7 @@ public:
 		//calculates next position based on direction and current position
 		Pos nextPos = obj->getPos();
 		Type at;
+		int element = -1;
 
 		// printw("moving someone");
 		// getch();
@@ -105,24 +131,27 @@ public:
 		// getch();
 
 		//we ain't moving into the wall, OR another customer
-		if (at != Type::WALL && at != Type::CUSTOMER)
+		if (at != Type::WALL && at != Type::CUSTOMER && at != Type::SHELF)
 		{
 			// printw("Moving");
 			// getch();
 			//actually moves the character
 			obj->move(nextPos);
 
-			if (at == Type::ITEM)
-			{
-				obj->pickup(itemAt(nextPos));
-			}
-
 			if (at == Type::CHECKOUT)
 			{
-				checkout.push_back(obj->getElement()); //customer leaves, his item gets
-				destroy(obj); //removes object from the game board
+				destroy(static_cast<Customer *>(obj)); //removes object from the game board
 			}
 		}
+
+		if (at == Type::SHELF && obj->getElement() == -1 && !unsortedList.empty())
+		{
+			//customer picks last item off the shelf - CHANGE THIS TO RANDOM LATER
+			element = unsortedList.back();
+			unsortedList.pop_back();
+			obj->pickup(element);
+		}
+
 		obj->changeDir();
 	}
 
@@ -134,7 +163,12 @@ public:
 			//no protection against negative values may cause trouble
 			mvaddch(o->getPos().y, o->getPos().x, o->getGraphic());
 		}
-		move(BOARDHEIGHT - 1, BOARDWIDTH - 1);
+
+		//add sorted list to bottom of screen
+		move(BOARDHEIGHT + 1, 0);
+		for (int i : checkout)
+			printw("%d ", i);
+
 		refresh();
 	}
 
@@ -154,20 +188,26 @@ public:
 		return nullptr; //nothing was found there
 	}
 
-	const int itemAt(const Pos & position)
-	{
-		for (Object *o : board)
-		{
-			if (o->getPos() == position)
-			{
-				return o->getElement();
-			}
-		}
-	}
-
-	void destroy(const Object * obj)
+	void destroy(const Customer * obj)
 	{
 		numCustomers--;
+
+		//checkout.push_back(1);
+
+		// printw("Customer has item %d", obj->getElement());
+		// getch();
+
+		//adds element to sorted list
+		if (obj->getElement() != -1)
+		{
+			if (obj->getElement() == 33) //don't ask about this bug please
+			{
+				printw("33 ALERT!!!");
+				getch();
+			}
+			checkout.push_back(obj->getElement());
+		}
+
 		auto it = find(board.begin(), board.end(), obj);
 		delete obj;
 		board.erase(it);
@@ -184,7 +224,7 @@ public:
 	//returns true if customer successfully spawned
 	bool spawnCustomer(Pos position)
 	{
-		if (spawn(rand) == 1) //this tick will spawn a customer
+		if (spawn(rand) == 1) //this tick will spawn a customer - changed to 33 for posterity
 		{
 			// printw("Spawn tick");
 			// getch();
@@ -201,12 +241,19 @@ public:
 			return false;
 	}
 
+	//used to return the sorted list at the end
+	std::vector<int> getCheckout(void)
+	{
+		return checkout;
+	}
+
 	~Board()
 	{
 		auto it = board.begin();
 		while (it != board.end())
 		{
 			delete *it; //frees ye objects
+			it++;
 		}
 	}
 
@@ -215,9 +262,12 @@ private:
 	//Object board[BOARDHEIGHT][BOARDWIDTH]; //WRONGO DONGO
 
 	std::vector<Object *> board;
+	std::vector<int> originalList; //list to sort
+	std::vector<int> unsortedList; //current items remaining in original list
 	std::vector<int> checkout; //where the items go
 
 	std::default_random_engine rand;
+	std::uniform_int_distribution<int> items;
 	std::uniform_int_distribution<int> spawn;
 
 	int numCustomers;
