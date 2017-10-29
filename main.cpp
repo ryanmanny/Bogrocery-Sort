@@ -18,7 +18,7 @@ int main (void)
 	{
 		sorted = store.update();
 		//printw("WAH WAH");
-		usleep(5000);
+		usleep(500);
 		store.print();
 	}
 

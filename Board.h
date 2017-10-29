@@ -224,6 +224,7 @@ public:
 	//returns true if customer successfully spawned
 	bool spawnCustomer(Pos position)
 	{
+		bool success = false;
 		if (spawn(rand) == 1) //this tick will spawn a customer - changed to 33 for posterity
 		{
 			// printw("Spawn tick");
@@ -234,11 +235,10 @@ public:
 				// getch();
 				board.push_back(new Customer(Type::CUSTOMER, GCUSTOMER, -1, position));
 				numCustomers++;
-				return true;
+				success = true;
 			}
 		}
-		else
-			return false;
+		return success;
 	}
 
 	//used to return the sorted list at the end

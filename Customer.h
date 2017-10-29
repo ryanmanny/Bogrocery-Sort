@@ -51,6 +51,8 @@ public:
 			return Dir::EAST;
 		if (i == 3)
 			return Dir::WEST;
+
+		return Dir::NORTH; //spooky case
 	}
 
 private:
