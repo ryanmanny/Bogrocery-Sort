@@ -10,7 +10,7 @@ struct Pos
 
 enum Dir
 {
-	NORTH, SOUTH, EAST, WEST
+	NORTH, SOUTH, EAST, WEST, NONE
 };
 
 bool operator==(const Pos &l, const Pos &r)
