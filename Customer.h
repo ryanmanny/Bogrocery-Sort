@@ -6,7 +6,7 @@ public:
 	Customer(Type newType, char newGraphic, const int newElement, Pos position = {0,0}) : Object(newType, newGraphic, position, newElement)
 	{
 		rand.seed(std::chrono::system_clock::now().time_since_epoch().count());
-		dir = std::uniform_int_distribution<int>(0,3); //four directions
+		dir = std::uniform_int_distribution<int>(0,90); //four directions
 		nextDir = toDir(dir(rand));
 		//printw("does dir work %d", dir(rand));
 		//getch();
@@ -51,6 +51,8 @@ public:
 			return Dir::EAST;
 		if (i == 3)
 			return Dir::WEST;
+		if (i > 3)
+			return Dir::NONE;
 
 		return Dir::NORTH; //spooky case
 	}
