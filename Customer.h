@@ -19,6 +19,7 @@ public:
 	{
 		//pickup
 		element = newElement;
+		graphic = '@';
 	}
 
 	void move(const Pos & nextPos)
@@ -54,7 +55,7 @@ public:
 		if (i > 3)
 			return Dir::NONE;
 
-		return Dir::NORTH; //spooky case
+		return Dir::NONE; //spooky case
 	}
 
 private:

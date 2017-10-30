@@ -15,8 +15,8 @@
 #define CUSTOMERPOS {22,6}
 #define DOORPOS {23,7} //customers come out of the door
 
-#define SPAWNLIKELIHOOD 50 //likelihood that a customer will spawn every tick. 0 is guaranteed every tick
-#define MAXCUSTOMERS 200 //((BOARDWIDTH - 2) * (BOARDHEIGHT - 2)) / 2 //fire marshall code
+#define SPAWNLIKELIHOOD 100 //likelihood that a customer will spawn every tick. 0 is guaranteed every tick
+#define MAXCUSTOMERS ((BOARDWIDTH - 2) * (BOARDHEIGHT - 2)) / 20 //fire marshall code
 
 class Board
 {

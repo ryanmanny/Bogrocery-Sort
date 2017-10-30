@@ -1,7 +1,7 @@
 #include "includes.h"
 #include "Board.h"
 
-#define SPEED 10000 //time to wait between ticks in microseconds
+#define SPEED 40000 //time to wait between ticks in microseconds
 
 int main (void)
 {
