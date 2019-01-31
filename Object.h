@@ -25,7 +25,7 @@ typedef enum type
 {
 	EMPTY, WALL, CUSTOMER, SHELF, CHECKOUT
 	//empty is returned when no item at position, lack of action
-}Type;
+} Type;
 
 class Object
 {

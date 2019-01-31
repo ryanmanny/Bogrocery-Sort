@@ -123,7 +123,9 @@ public:
 			nextPos.x += 1;
 		if (obj->getDirection() == Dir::WEST)
 			nextPos.x -= 1;
-		//if none case, nothing happens
+		if (obj->getDirection() == Dir::NONE)
+			nextPos.x -= 0;
+			nextPos.y -= 0;
 
 		//check to see what is at the new position
 		if (atPos(nextPos) != nullptr)
